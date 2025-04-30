@@ -1,0 +1,132 @@
+import React, { useState } from 'react';
+import { CheckSquare, Square, X, Plus, ChevronDown, ChevronRight } from 'lucide-react';
+
+export default function ChecklistPanel({ items, onUpdateItems }) {
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [newItem, setNewItem] = useState('');
+
+  const toggleExpanded = () => {
+    setIsExpanded(!isExpanded);
+  };
+
+  const handleToggleComplete = (index) => {
+    const updatedItems = [...items];
+    updatedItems[index] = {
+      ...updatedItems[index],
+      completed: !updatedItems[index].completed
+    };
+    onUpdateItems(updatedItems);
+  };
+
+  const handleEditItem = (index, newText) => {
+    const updatedItems = [...items];
+    updatedItems[index] = {
+      ...updatedItems[index],
+      text: newText
+    };
+    onUpdateItems(updatedItems);
+  };
+
+  const handleDeleteItem = (index) => {
+    const updatedItems = [...items];
+    updatedItems.splice(index, 1);
+    onUpdateItems(updatedItems);
+  };
+
+  const handleAddItem = () => {
+    if (!newItem.trim()) return;
+    
+    const updatedItems = [
+      ...items,
+      { text: newItem, completed: false }
+    ];
+    onUpdateItems(updatedItems);
+    setNewItem('');
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddItem();
+    }
+  };
+
+  if (items.length === 0 && !newItem) {
+    return null;
+  }
+
+  return (
+    <div className="mb-4 border rounded-md overflow-hidden bg-gray-50">
+      <div 
+        className="flex items-center justify-between p-2 bg-gray-100 cursor-pointer"
+        onClick={toggleExpanded}
+      >
+        <div className="flex items-center text-sm font-medium text-gray-700">
+          {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+          <span className="ml-1">
+            Checklist ({items.filter(item => item.completed).length}/{items.length})
+          </span>
+        </div>
+      </div>
+
+      {isExpanded && (
+        <div className="p-2">
+          <ul className="space-y-2">
+            {items.map((item, index) => (
+              <li 
+                key={index}
+                className="p-2 rounded-md bg-white border flex items-center justify-between"
+              >
+                <div className="flex items-center flex-1">
+                  <button
+                    onClick={() => handleToggleComplete(index)}
+                    className={`mr-2 flex-shrink-0 ${item.completed ? 'text-green-500' : 'text-gray-400'}`}
+                  >
+                    {item.completed ? <CheckSquare size={18} /> : <Square size={18} />}
+                  </button>
+                  <input
+                    type="text"
+                    value={item.text}
+                    onChange={(e) => handleEditItem(index, e.target.value)}
+                    className={`flex-1 text-sm bg-transparent outline-none ${
+                      item.completed ? 'line-through text-gray-500' : ''
+                    }`}
+                  />
+                </div>
+                <button 
+                  onClick={() => handleDeleteItem(index)}
+                  className="p-1 ml-2 rounded hover:bg-gray-100"
+                >
+                  <X size={14} className="text-red-500" />
+                </button>
+              </li>
+            ))}
+
+            <li className="flex items-center p-2 rounded-md bg-white border">
+              <Plus size={18} className="text-gray-400 mr-2" />
+              <input
+                type="text"
+                value={newItem}
+                onChange={(e) => setNewItem(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Add new item"
+                className="flex-1 text-sm bg-transparent outline-none"
+              />
+              <button
+                onClick={handleAddItem}
+                disabled={!newItem.trim()}
+                className={`ml-2 px-2 py-1 text-xs rounded ${
+                  newItem.trim()
+                    ? 'bg-blue-500 text-white hover:bg-blue-600'
+                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                Add
+              </button>
+            </li>
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}

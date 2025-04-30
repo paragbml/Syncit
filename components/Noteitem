@@ -1,0 +1,93 @@
+import React from "react";
+import { format } from "date-fns";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { Pin, Link2, CheckSquare } from "lucide-react";
+
+export default function NoteItem({ note, isSelected }) {
+  // Format date like "Aug 25, 2023" for recent notes or "Aug 25, 2023" for older notes
+  const formatDate = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      
+      // Use today/yesterday for recent notes
+      if (date.toDateString() === now.toDateString()) {
+        return "Today";
+      }
+      
+      const yesterday = new Date(now);
+      yesterday.setDate(now.getDate() - 1);
+      if (date.toDateString() === yesterday.toDateString()) {
+        return "Yesterday";
+      }
+      
+      // Otherwise use formatted date
+      return format(date, "MMM d, yyyy");
+    } catch (e) {
+      return "Recently";
+    }
+  };
+
+  // Create a preview of the note content without HTML tags
+  const createPreview = (content) => {
+    if (!content) return "";
+    
+    // Strip HTML tags if present
+    const strippedContent = content.replace(/<[^>]*>/g, '');
+    
+    // Limit to ~ 100 characters
+    return strippedContent.length > 100
+      ? strippedContent.substring(0, 100) + "..."
+      : strippedContent;
+  };
+
+  // Count resources and checklist items
+  const resourceCount = note.resources?.length || 0;
+  const checklistItems = note.checklist?.length || 0;
+  const completedItems = note.checklist?.filter(item => item.completed)?.length || 0;
+
+  return (
+    <Link
+      to={createPageUrl(`NoteEdit?id=${note.id}`)}
+      className={`block border-b border-gray-100 transition-colors ${
+        isSelected
+          ? "bg-blue-50"
+          : "hover:bg-gray-50"
+      }`}
+    >
+      <div className="p-4">
+        <div className="flex items-start justify-between">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium text-gray-900 mb-1 flex items-center">
+              {note.is_pinned && (
+                <Pin size={14} className="text-yellow-500 inline mr-1 transform -rotate-45" />
+              )}
+              {note.title || "Untitled Note"}
+            </h3>
+            <div className="flex items-center text-xs text-gray-500 mb-2">
+              <span>{formatDate(note.last_modified || note.created_date)}</span>
+              
+              {resourceCount > 0 && (
+                <span className="flex items-center ml-3">
+                  <Link2 size={12} className="mr-1" />
+                  {resourceCount}
+                </span>
+              )}
+              
+              {checklistItems > 0 && (
+                <span className="flex items-center ml-3">
+                  <CheckSquare size={12} className="mr-1" />
+                  {completedItems}/{checklistItems}
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-gray-600 line-clamp-2">
+              {createPreview(note.content)}
+            </p>
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}

@@ -1,0 +1,163 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { InvokeLLM } from '@/integrations/Core';
+import { Send, ArrowDown, Bot, User, X, Lightbulb } from 'lucide-react';
+
+export default function AIChatInterface({ isOpen, onClose }) {
+  const [messages, setMessages] = useState([
+    {
+      role: 'assistant',
+      content: 'Hi there! I\'m your study assistant. I can help with questions about your notes, explain concepts, or assist with your studies. What would you like help with today?'
+    }
+  ]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!input.trim() || loading) return;
+
+    // Add user message
+    const userMessage = { role: 'user', content: input };
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setLoading(true);
+
+    try {
+      // Construct conversation history for context
+      let context = "";
+      for (const msg of messages.slice(-4)) {  // Last 4 messages for context
+        context += `${msg.role === 'assistant' ? 'Assistant' : 'User'}: ${msg.content}\n`;
+      }
+      context += `User: ${input}\n`;
+      
+      // Prepare prompt
+      const prompt = `You are a helpful, friendly study assistant for a student using a notes app. 
+        Answer questions concisely and accurately. If you're unsure, admit it rather than speculate.
+        Provide responses that would be helpful for a student. Feel free to suggest study techniques when appropriate.
+        
+        Previous conversation:
+        ${context}
+        
+        Assistant:`;
+      
+      // Call the LLM integration
+      const response = await InvokeLLM({
+        prompt,
+        add_context_from_internet: true
+      });
+      
+      // Add assistant response
+      setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+    } catch (error) {
+      console.error("Error getting AI response:", error);
+      setMessages(prev => [
+        ...prev,
+        { role: 'assistant', content: 'Sorry, I had trouble processing your question. Please try again.' }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed bottom-0 right-4 w-[400px] h-[500px] bg-[var(--note-bg)] shadow-xl rounded-t-lg flex flex-col border border-[var(--border-color)] text-[var(--text-primary)] z-50">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-[var(--border-color)] p-3">
+        <div className="flex items-center">
+          <Bot className="w-5 h-5 mr-2 text-[var(--accent)]" />
+          <h3 className="font-medium">Study Assistant</h3>
+        </div>
+        <button onClick={onClose} className="p-1 rounded hover:bg-[var(--sidebar-hover)]">
+          <X size={18} />
+        </button>
+      </div>
+      
+      {/* Chat messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((message, index) => (
+          <div 
+            key={index} 
+            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            <div 
+              className={`max-w-[80%] rounded-lg p-3 ${
+                message.role === 'user' 
+                  ? 'bg-[var(--accent)] text-white' 
+                  : 'bg-[var(--sidebar-bg)]'
+              }`}
+            >
+              <div className="flex items-center mb-1">
+                {message.role === 'assistant' ? (
+                  <><Bot size={14} className="mr-1" /> <span className="text-xs font-semibold">Assistant</span></>
+                ) : (
+                  <><User size={14} className="mr-1" /> <span className="text-xs font-semibold">You</span></>
+                )}
+              </div>
+              <div className="text-sm whitespace-pre-wrap">
+                {message.content}
+              </div>
+            </div>
+          </div>
+        ))}
+        
+        {loading && (
+          <div className="flex justify-start">
+            <div className="max-w-[80%] rounded-lg p-3 bg-[var(--sidebar-bg)]">
+              <div className="flex items-center mb-1">
+                <Bot size={14} className="mr-1" /> 
+                <span className="text-xs font-semibold">Assistant</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: '300ms' }}></div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <div ref={messagesEndRef} />
+      </div>
+      
+      {/* Input form */}
+      <form onSubmit={handleSubmit} className="border-t border-[var(--border-color)] p-3">
+        <div className="flex">
+          <input
+            ref={inputRef}
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask me anything about your studies..."
+            className="flex-1 bg-[var(--sidebar-bg)] text-[var(--text-primary)] rounded-l-md px-4 py-2 focus:outline-none"
+            disabled={loading}
+          />
+          <button
+            type="submit"
+            disabled={!input.trim() || loading}
+            className="bg-[var(--accent)] hover:bg-[var(--accent-light)] text-white px-3 py-2 rounded-r-md disabled:opacity-50"
+          >
+            <Send size={18} />
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}

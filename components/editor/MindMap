@@ -1,0 +1,315 @@
+import React, { useState, useRef, useEffect } from "react";
+import { XCircle, Plus, Move, Trash2, ChevronDown, ChevronRight } from "lucide-react";
+
+export default function MindMap({ initialData, onUpdate, onClose }) {
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [nodes, setNodes] = useState(initialData?.nodes || []);
+  const [edges, setEdges] = useState(initialData?.edges || []);
+  const [selectedNode, setSelectedNode] = useState(null);
+  const [draggedNode, setDraggedNode] = useState(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [newNodeText, setNewNodeText] = useState("");
+  const [isEditingText, setIsEditingText] = useState(false);
+  const svgRef = useRef(null);
+  const inputRef = useRef(null);
+
+  // Create a root node if none exists
+  useEffect(() => {
+    if (nodes.length === 0) {
+      const rootNode = {
+        id: generateId(),
+        text: "Main Topic",
+        x: 250,
+        y: 100
+      };
+      setNodes([rootNode]);
+    }
+  }, []);
+
+  // Update parent when data changes
+  useEffect(() => {
+    onUpdate({ nodes, edges });
+  }, [nodes, edges]);
+
+  // Focus on text input when editing
+  useEffect(() => {
+    if (isEditingText && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isEditingText]);
+
+  const generateId = () => {
+    return Math.random().toString(36).substring(2, 10);
+  };
+
+  const toggleExpanded = () => {
+    setIsExpanded(!isExpanded);
+  };
+
+  const handleNodeClick = (e, node) => {
+    e.stopPropagation();
+    if (selectedNode?.id === node.id) {
+      setIsEditingText(true);
+    } else {
+      setSelectedNode(node);
+      setIsEditingText(false);
+    }
+  };
+
+  const handleSvgClick = () => {
+    setSelectedNode(null);
+    setIsEditingText(false);
+  };
+
+  const handleAddChild = () => {
+    if (!selectedNode) return;
+
+    const newNode = {
+      id: generateId(),
+      text: "New Node",
+      x: selectedNode.x + 150,
+      y: selectedNode.y
+    };
+
+    const newEdge = {
+      source: selectedNode.id,
+      target: newNode.id
+    };
+
+    setNodes([...nodes, newNode]);
+    setEdges([...edges, newEdge]);
+    setSelectedNode(newNode);
+    setIsEditingText(true);
+  };
+
+  const handleDeleteNode = () => {
+    if (!selectedNode) return;
+
+    // Don't delete the last node
+    if (nodes.length <= 1) return;
+
+    // Remove the node
+    const newNodes = nodes.filter(n => n.id !== selectedNode.id);
+    
+    // Remove any edges connected to this node
+    const newEdges = edges.filter(
+      e => e.source !== selectedNode.id && e.target !== selectedNode.id
+    );
+
+    setNodes(newNodes);
+    setEdges(newEdges);
+    setSelectedNode(null);
+  };
+
+  const handleTextChange = (e) => {
+    if (!selectedNode) return;
+
+    const newNodes = nodes.map(n => 
+      n.id === selectedNode.id ? { ...n, text: e.target.value } : n
+    );
+    
+    setNodes(newNodes);
+    setSelectedNode({ ...selectedNode, text: e.target.value });
+  };
+
+  const handleTextBlur = () => {
+    setIsEditingText(false);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      setIsEditingText(false);
+    }
+  };
+
+  const handleDragStart = (e, node) => {
+    e.stopPropagation();
+    
+    const svgRect = svgRef.current.getBoundingClientRect();
+    const offsetX = e.clientX - svgRect.left - node.x;
+    const offsetY = e.clientY - svgRect.top - node.y;
+    
+    setDraggedNode(node);
+    setDragOffset({ x: offsetX, y: offsetY });
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    if (!draggedNode) return;
+
+    const svgRect = svgRef.current.getBoundingClientRect();
+    const x = e.clientX - svgRect.left - dragOffset.x;
+    const y = e.clientY - svgRect.top - dragOffset.y;
+    
+    // Update the node position
+    const newNodes = nodes.map(n => 
+      n.id === draggedNode.id ? { ...n, x, y } : n
+    );
+    
+    setNodes(newNodes);
+    setDraggedNode({ ...draggedNode, x, y });
+    
+    // If this node is selected, update selected node too
+    if (selectedNode && selectedNode.id === draggedNode.id) {
+      setSelectedNode({ ...selectedNode, x, y });
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedNode(null);
+  };
+
+  return (
+    <div className="mb-4 border rounded-md overflow-hidden bg-gray-50">
+      <div 
+        className="flex items-center justify-between p-2 bg-gray-100 cursor-pointer"
+        onClick={toggleExpanded}
+      >
+        <div className="flex items-center text-sm font-medium text-gray-700">
+          {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+          <span className="ml-1">Mind Map</span>
+        </div>
+        <div className="flex space-x-1">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
+            className="p-1 rounded hover:bg-gray-200"
+            title="Close Mind Map"
+          >
+            <XCircle size={14} />
+          </button>
+        </div>
+      </div>
+
+      {isExpanded && (
+        <div className="p-2">
+          <div className="bg-white border rounded-md p-2">
+            {/* Control panel */}
+            <div className="flex justify-between mb-2">
+              <div className="flex space-x-1">
+                <button
+                  onClick={handleAddChild}
+                  disabled={!selectedNode}
+                  className={`p-1 rounded text-xs flex items-center ${
+                    selectedNode ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-500'
+                  }`}
+                >
+                  <Plus size={12} className="mr-1" />
+                  Add Child
+                </button>
+                <button
+                  onClick={handleDeleteNode}
+                  disabled={!selectedNode || nodes.length <= 1}
+                  className={`p-1 rounded text-xs flex items-center ${
+                    selectedNode && nodes.length > 1 ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-500'
+                  }`}
+                >
+                  <Trash2 size={12} className="mr-1" />
+                  Delete
+                </button>
+              </div>
+              <div className="text-xs text-gray-500 flex items-center">
+                <Move size={12} className="mr-1" />
+                Drag to move nodes
+              </div>
+            </div>
+
+            {/* Mind map SVG */}
+            <div 
+              className="relative border bg-gray-50 rounded-md"
+              style={{ height: '300px', overflow: 'hidden' }}
+              onMouseUp={handleDragEnd}
+            >
+              <svg
+                ref={svgRef}
+                width="100%"
+                height="100%"
+                onClick={handleSvgClick}
+                onMouseMove={handleDragOver}
+                style={{ cursor: draggedNode ? 'grabbing' : 'default' }}
+              >
+                {/* Draw edges */}
+                {edges.map(edge => {
+                  const sourceNode = nodes.find(n => n.id === edge.source);
+                  const targetNode = nodes.find(n => n.id === edge.target);
+                  
+                  if (!sourceNode || !targetNode) return null;
+                  
+                  return (
+                    <line
+                      key={`${edge.source}-${edge.target}`}
+                      x1={sourceNode.x}
+                      y1={sourceNode.y}
+                      x2={targetNode.x}
+                      y2={targetNode.y}
+                      stroke="#aaa"
+                      strokeWidth="2"
+                    />
+                  );
+                })}
+                
+                {/* Draw nodes */}
+                {nodes.map(node => {
+                  const isSelected = selectedNode?.id === node.id;
+                  const width = Math.max(node.text.length * 8, 80);
+                  
+                  return (
+                    <g key={node.id}>
+                      <rect
+                        x={node.x - width/2}
+                        y={node.y - 15}
+                        width={width}
+                        height="30"
+                        rx="15"
+                        fill={isSelected ? "#e3f2fd" : "white"}
+                        stroke={isSelected ? "#2196f3" : "#ddd"}
+                        strokeWidth="2"
+                        onClick={(e) => handleNodeClick(e, node)}
+                        onMouseDown={(e) => handleDragStart(e, node)}
+                        style={{ cursor: 'grab' }}
+                      />
+                      
+                      {isEditingText && isSelected ? (
+                        <foreignObject
+                          x={node.x - width/2}
+                          y={node.y - 15}
+                          width={width}
+                          height="30"
+                        >
+                          <input
+                            ref={inputRef}
+                            type="text"
+                            value={node.text}
+                            onChange={handleTextChange}
+                            onBlur={handleTextBlur}
+                            onKeyDown={handleKeyDown}
+                            className="w-full h-full text-center border-none outline-none bg-transparent text-sm"
+                            style={{ cursor: 'text' }}
+                            onClick={e => e.stopPropagation()}
+                          />
+                        </foreignObject>
+                      ) : (
+                        <text
+                          x={node.x}
+                          y={node.y + 5}
+                          textAnchor="middle"
+                          fontSize="12"
+                          onClick={(e) => handleNodeClick(e, node)}
+                          style={{ pointerEvents: 'none' }}
+                        >
+                          {node.text}
+                        </text>
+                      )}
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

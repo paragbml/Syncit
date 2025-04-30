@@ -1,0 +1,21 @@
+import React, { useState } from 'react';
+import { Lightbulb } from 'lucide-react';
+import AIChatInterface from './AIChatInterface';
+
+export default function StudyAssistantButton() {
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  
+  return (
+    <>
+      <button
+        onClick={() => setIsChatOpen(!isChatOpen)}
+        className="fixed bottom-6 right-6 w-12 h-12 rounded-full bg-[var(--accent)] text-white shadow-lg flex items-center justify-center hover:bg-[var(--accent-light)] transition-colors z-40"
+        title="Study Assistant"
+      >
+        <Lightbulb size={22} />
+      </button>
+      
+      <AIChatInterface isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+    </>
+  );
+}

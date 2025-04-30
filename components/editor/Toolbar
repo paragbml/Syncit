@@ -1,0 +1,165 @@
+import React from "react";
+import {
+  Bold,
+  Italic,
+  List,
+  CheckSquare,
+  Image,
+  Link2,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Heading1,
+  Heading2,
+  Underline,
+  Code,
+  Share2,
+  NetworkIcon,
+  Archive,
+  Trash2,
+  Pin,
+  Folder,
+  PlusCircle
+} from "lucide-react";
+
+export default function Toolbar({ 
+  onAction, 
+  isPinned,
+  isArchived,
+  onInsertResource,
+  onInsertChecklist,
+  onToggleMindMap 
+}) {
+  return (
+    <div className="border-b border-gray-200 bg-gray-50 p-1 flex items-center justify-between">
+      <div className="flex space-x-1 overflow-x-auto hide-scrollbar">
+        <button
+          onClick={() => onAction("heading1")}
+          className="p-1.5 rounded hover:bg-gray-200"
+          title="Heading 1"
+        >
+          <Heading1 size={18} />
+        </button>
+        <button
+          onClick={() => onAction("heading2")}
+          className="p-1.5 rounded hover:bg-gray-200"
+          title="Heading 2"
+        >
+          <Heading2 size={18} />
+        </button>
+        <span className="h-6 border-l border-gray-300 mx-1 my-auto"></span>
+        <button
+          onClick={() => onAction("bold")}
+          className="p-1.5 rounded hover:bg-gray-200"
+          title="Bold"
+        >
+          <Bold size={18} />
+        </button>
+        <button
+          onClick={() => onAction("italic")}
+          className="p-1.5 rounded hover:bg-gray-200"
+          title="Italic"
+        >
+          <Italic size={18} />
+        </button>
+        <button
+          onClick={() => onAction("underline")}
+          className="p-1.5 rounded hover:bg-gray-200"
+          title="Underline"
+        >
+          <Underline size={18} />
+        </button>
+        <span className="h-6 border-l border-gray-300 mx-1 my-auto"></span>
+        <button
+          onClick={() => onAction("alignLeft")}
+          className="p-1.5 rounded hover:bg-gray-200"
+          title="Align Left"
+        >
+          <AlignLeft size={18} />
+        </button>
+        <button
+          onClick={() => onAction("alignCenter")}
+          className="p-1.5 rounded hover:bg-gray-200"
+          title="Align Center"
+        >
+          <AlignCenter size={18} />
+        </button>
+        <button
+          onClick={() => onAction("alignRight")}
+          className="p-1.5 rounded hover:bg-gray-200"
+          title="Align Right"
+        >
+          <AlignRight size={18} />
+        </button>
+        <span className="h-6 border-l border-gray-300 mx-1 my-auto"></span>
+        <button
+          onClick={() => onAction("bulletList")}
+          className="p-1.5 rounded hover:bg-gray-200"
+          title="Bullet List"
+        >
+          <List size={18} />
+        </button>
+        <button
+          onClick={() => onInsertChecklist()}
+          className="p-1.5 rounded hover:bg-gray-200"
+          title="Checklist"
+        >
+          <CheckSquare size={18} />
+        </button>
+        <button
+          onClick={() => onAction("code")}
+          className="p-1.5 rounded hover:bg-gray-200"
+          title="Code"
+        >
+          <Code size={18} />
+        </button>
+      </div>
+
+      <div className="flex space-x-1">
+        <button
+          onClick={() => onInsertResource("image")}
+          className="p-1.5 rounded hover:bg-gray-200"
+          title="Insert Image"
+        >
+          <Image size={18} />
+        </button>
+        <button
+          onClick={() => onInsertResource("link")}
+          className="p-1.5 rounded hover:bg-gray-200"
+          title="Insert Link"
+        >
+          <Link2 size={18} />
+        </button>
+        <button
+          onClick={() => onToggleMindMap()}
+          className="p-1.5 rounded hover:bg-gray-200"
+          title="Mind Map"
+        >
+          <NetworkIcon size={18} />
+        </button>
+        <span className="h-6 border-l border-gray-300 mx-1 my-auto"></span>
+        <button
+          onClick={() => onAction("pin")}
+          className={`p-1.5 rounded hover:bg-gray-200 ${isPinned ? 'text-yellow-500' : ''}`}
+          title={isPinned ? "Unpin" : "Pin"}
+        >
+          <Pin size={18} className={isPinned ? "transform -rotate-45" : ""} />
+        </button>
+        <button
+          onClick={() => onAction("archive")}
+          className={`p-1.5 rounded hover:bg-gray-200 ${isArchived ? 'text-blue-500' : ''}`}
+          title={isArchived ? "Unarchive" : "Archive"}
+        >
+          <Archive size={18} />
+        </button>
+        <button
+          onClick={() => onAction("delete")}
+          className="p-1.5 rounded hover:bg-gray-200 text-red-500"
+          title="Delete"
+        >
+          <Trash2 size={18} />
+        </button>
+      </div>
+    </div>
+  );
+}

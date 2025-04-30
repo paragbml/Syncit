@@ -1,0 +1,19 @@
+{
+  "name": "Folder",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the folder"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Icon for the folder"
+    },
+    "order": {
+      "type": "number",
+      "description": "Order of the folder in the sidebar"
+    }
+  },
+  "required": []
+}

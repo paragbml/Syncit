@@ -1,0 +1,163 @@
+import React, { useState } from 'react';
+import { InvokeLLM } from '@/integrations/Core';
+import { Bot, Coffee, Search, BookOpen, Sparkles, Loader2 } from 'lucide-react';
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
+
+export default function NoteHelpers({ noteContent, onInsertText }) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeHelper, setActiveHelper] = useState(null);
+
+  const generateContent = async (type) => {
+    if (isLoading) return;
+    
+    setIsLoading(true);
+    setActiveHelper(type);
+    
+    try {
+      let prompt = '';
+      
+      switch(type) {
+        case 'summarize':
+          prompt = `Please summarize the following study note content in 3-4 bullet points. Format with bullet points.
+          
+          Content: ${noteContent}
+          
+          Summary:`;
+          break;
+          
+        case 'expand':
+          prompt = `Please expand on the following study note with more details, examples, or explanations. Keep the same general topics but add depth.
+          
+          Original content: ${noteContent}
+          
+          Expanded content:`;
+          break;
+          
+        case 'questions':
+          prompt = `Based on the following study note, generate 3-5 practice questions that would help test understanding of this material. Format with numbers.
+          
+          Study material: ${noteContent}
+          
+          Practice questions:`;
+          break;
+          
+        case 'improve':
+          prompt = `Please suggest how this study note could be improved for better organization, clarity, or completeness. Provide specific recommendations.
+          
+          Current content: ${noteContent}
+          
+          Improvement suggestions:`;
+          break;
+      }
+      
+      const response = await InvokeLLM({
+        prompt,
+        add_context_from_internet: false
+      });
+      
+      onInsertText(`\n\n**${type === 'summarize' ? 'Summary' : 
+                        type === 'expand' ? 'Additional Information' :
+                        type === 'questions' ? 'Practice Questions' :
+                        'Improvement Suggestions'}**\n\n${response}`);
+      
+    } catch (error) {
+      console.error("Error generating content:", error);
+    } finally {
+      setIsLoading(false);
+      setActiveHelper(null);
+    }
+  };
+  
+  return (
+    <div className="flex space-x-2">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => generateContent('summarize')}
+              className={`p-1.5 rounded hover:bg-gray-200 ${isLoading && activeHelper === 'summarize' ? 'opacity-50' : ''}`}
+              disabled={isLoading}
+            >
+              {isLoading && activeHelper === 'summarize' ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <Coffee size={18} />
+              )}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Summarize Note</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => generateContent('expand')}
+              className={`p-1.5 rounded hover:bg-gray-200 ${isLoading && activeHelper === 'expand' ? 'opacity-50' : ''}`}
+              disabled={isLoading}
+            >
+              {isLoading && activeHelper === 'expand' ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <BookOpen size={18} />
+              )}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Expand Content</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => generateContent('questions')}
+              className={`p-1.5 rounded hover:bg-gray-200 ${isLoading && activeHelper === 'questions' ? 'opacity-50' : ''}`}
+              disabled={isLoading}
+            >
+              {isLoading && activeHelper === 'questions' ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <Search size={18} />
+              )}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Generate Practice Questions</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => generateContent('improve')}
+              className={`p-1.5 rounded hover:bg-gray-200 ${isLoading && activeHelper === 'improve' ? 'opacity-50' : ''}`}
+              disabled={isLoading}
+            >
+              {isLoading && activeHelper === 'improve' ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <Sparkles size={18} />
+              )}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Improve Note</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
+  );
+}

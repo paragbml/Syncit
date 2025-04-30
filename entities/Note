@@ -1,0 +1,112 @@
+{
+    "name": "Note",
+    "type": "object",
+    "properties": {
+      "title": {
+        "type": "string",
+        "description": "Title of the note"
+      },
+      "content": {
+        "type": "string",
+        "description": "Content of the note"
+      },
+      "folder": {
+        "type": "string",
+        "default": "All Notes",
+        "description": "Folder the note belongs to"
+      },
+      "is_pinned": {
+        "type": "boolean",
+        "default": false,
+        "description": "Whether the note is pinned to the top"
+      },
+      "is_archived": {
+        "type": "boolean",
+        "default": false,
+        "description": "Whether the note is archived"
+      },
+      "resources": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "link",
+                "image"
+              ]
+            }
+          }
+        },
+        "default": []
+      },
+      "checklist": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "completed": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        },
+        "default": []
+      },
+      "mindmap": {
+        "type": "object",
+        "properties": {
+          "nodes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "edges": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "target": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "last_modified": {
+        "type": "string",
+        "format": "date-time",
+        "description": "Last modified date"
+      }
+    },
+    "required": []
+  }

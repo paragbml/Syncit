@@ -1,0 +1,150 @@
+import React, { useState, useEffect } from "react";
+import { Note } from "@/entities/Note";
+import { Plus, Search, SortDesc, Grid, List, X, MessageCircle } from "lucide-react";
+import NoteItem from "./NoteItem";
+import { Link, useLocation } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+
+export default function NotesList({ folder = "All Notes", isArchive = false }) {
+  const [notes, setNotes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("-last_modified");
+  const [viewMode, setViewMode] = useState("list"); // list or grid
+  const location = useLocation();
+  
+  const selectedNoteId = new URLSearchParams(location.search).get("id");
+
+  useEffect(() => {
+    loadNotes();
+  }, [folder, isArchive, sortBy]);
+
+  const loadNotes = async () => {
+    setLoading(true);
+    try {
+      let query = {};
+      
+      // Filter by folder
+      if (folder !== "All Notes") {
+        query.folder = folder;
+      }
+      
+      // Filter archived notes
+      query.is_archived = isArchive;
+      
+      // Get notes
+      let notesList = await Note.filter(query, sortBy);
+      
+      // Sort pinned notes to top if sorting by date
+      if (sortBy.includes("last_modified") || sortBy.includes("created_date")) {
+        notesList = [...notesList.filter(n => n.is_pinned), ...notesList.filter(n => !n.is_pinned)];
+      }
+      
+      setNotes(notesList);
+    } catch (error) {
+      console.error("Error loading notes:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredNotes = searchQuery
+    ? notes.filter(
+        note =>
+          note.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          note.content?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : notes;
+
+  const clearSearch = () => {
+    setSearchQuery("");
+  };
+
+  return (
+    <div className="flex flex-col h-full border-r border-gray-200">
+      {/* Header */}
+      <div className="p-3 border-b border-gray-200 flex-shrink-0">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-medium">
+            {isArchive ? "Archive" : folder}
+          </h2>
+          <div className="flex space-x-1">
+            <button
+              className={`p-1.5 rounded ${viewMode === "list" ? "bg-gray-200" : "hover:bg-gray-100"}`}
+              onClick={() => setViewMode("list")}
+            >
+              <List size={18} />
+            </button>
+            <button
+              className={`p-1.5 rounded ${viewMode === "grid" ? "bg-gray-200" : "hover:bg-gray-100"}`}
+              onClick={() => setViewMode("grid")}
+            >
+              <Grid size={18} />
+            </button>
+          </div>
+        </div>
+        <div className="relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search notes"
+            className="w-full py-2 pl-9 pr-9 rounded-md bg-gray-100 text-gray-800 placeholder-gray-500 outline-none"
+          />
+          <Search size={18} className="absolute left-3 top-2.5 text-gray-500" />
+          {searchQuery && (
+            <button
+              onClick={clearSearch}
+              className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
+            >
+              <X size={18} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Notes List */}
+      <div className="flex-1 overflow-y-auto">
+        {loading ? (
+          <div className="p-4 text-center text-gray-500">Loading notes...</div>
+        ) : filteredNotes.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-gray-500 p-4">
+            <MessageCircle size={40} className="mb-2 text-gray-300" />
+            <p className="mb-1 text-center">
+              {searchQuery ? "No notes match your search" : "No notes yet"}
+            </p>
+            {!searchQuery && (
+              <Link
+                to={createPageUrl("NoteEdit")}
+                className="mt-2 text-blue-500 flex items-center"
+              >
+                <Plus size={16} className="mr-1" /> Create your first note
+              </Link>
+            )}
+          </div>
+        ) : (
+          <div className={viewMode === "grid" ? "grid grid-cols-2 gap-0.5" : ""}>
+            {filteredNotes.map((note) => (
+              <NoteItem
+                key={note.id}
+                note={note}
+                isSelected={selectedNoteId === note.id}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Footer with Button */}
+      <div className="p-3 border-t border-gray-200 flex-shrink-0">
+        <Link
+          to={createPageUrl("NoteEdit")}
+          className="flex items-center justify-center py-2 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-light)] text-white transition-colors"
+        >
+          <Plus size={18} className="mr-2" />
+          New Note
+        </Link>
+      </div>
+    </div>
+  );
+}
