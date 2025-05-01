@@ -48,35 +48,6 @@ export default function FoldersPage() {
     }
   };
 
-  const handleEditFolder = (folder) => {
-    setEditingFolder({ ...folder });
-  };
-
-  const handleSaveEdit = async () => {
-    if (!editingFolder.name.trim()) return;
-    
-    try {
-      await Folder.update(editingFolder.id, editingFolder);
-      setEditingFolder(null);
-      loadFolders();
-    } catch (error) {
-      console.error("Error updating folder:", error);
-    }
-  };
-
-  const handleDeleteFolder = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this folder?")) return;
-    
-    try {
-      await Folder.delete(id);
-      loadFolders();
-    } catch (error) {
-      console.error("Error deleting folder:", error);
-    }
-  };
-
-  const commonEmojis = ["📁", "📚", "📒", "📓", "📔", "📕", "📖", "📗", "📘", "📙", "🗒️", "🗓️", "📊", "📈", "🧪", "🔬", "🧮", "🔖", "📑", "🏫", "🎓", "✏️", "📝", "📌"];
-
   return (
     <div className="max-w-2xl mx-auto p-4 h-full">
       <div className="flex items-center justify-between mb-6">
@@ -98,17 +69,6 @@ export default function FoldersPage() {
           <div className="flex-shrink-0">
             <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-2xl">
               {newFolder.icon}
-            </div>
-            <div className="mt-2">
-              <select
-                value={newFolder.icon}
-                onChange={(e) => setNewFolder({ ...newFolder, icon: e.target.value })}
-                className="w-full p-1 border rounded text-center"
-              >
-                {commonEmojis.map(emoji => (
-                  <option key={emoji} value={emoji}>{emoji}</option>
-                ))}
-              </select>
             </div>
           </div>
           <div className="flex-1">
@@ -135,92 +95,20 @@ export default function FoldersPage() {
         </div>
       </div>
 
-      {/* Folders list */}
+      {/* Display folders list */}
       <div className="bg-white rounded-lg border">
-        <div className="p-4 border-b">
-          <h2 className="text-lg font-medium">My Folders</h2>
-        </div>
-        
         {loading ? (
-          <div className="p-8 text-center text-gray-500">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
-            <p>Loading folders...</p>
-          </div>
+          <div className="p-8 text-center">Loading folders...</div>
         ) : folders.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
-            <p>No folders created yet.</p>
-          </div>
+          <div className="p-8 text-center">No folders created yet.</div>
         ) : (
           <ul className="divide-y">
-            {folders.map((folder) => (
-              <li key={folder.id} className="p-4">
-                {editingFolder?.id === folder.id ? (
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0">
-                      <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-2xl">
-                        {editingFolder.icon}
-                      </div>
-                      <div className="mt-2">
-                        <select
-                          value={editingFolder.icon}
-                          onChange={(e) => setEditingFolder({ ...editingFolder, icon: e.target.value })}
-                          className="w-full p-1 border rounded text-center"
-                        >
-                          {commonEmojis.map(emoji => (
-                            <option key={emoji} value={emoji}>{emoji}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        value={editingFolder.name}
-                        onChange={(e) => setEditingFolder({ ...editingFolder, name: e.target.value })}
-                        className="w-full p-2 border rounded mb-3"
-                      />
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={handleSaveEdit}
-                          className="flex items-center px-3 py-1 rounded bg-green-500 text-white hover:bg-green-600"
-                        >
-                          <Save size={16} className="mr-1" />
-                          Save
-                        </button>
-                        <button
-                          onClick={() => setEditingFolder(null)}
-                          className="flex items-center px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
-                        >
-                          <X size={16} className="mr-1" />
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-xl mr-3">
-                        {folder.icon}
-                      </div>
-                      <span className="font-medium">{folder.name}</span>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleEditFolder(folder)}
-                        className="p-1.5 rounded hover:bg-gray-100"
-                      >
-                        <Edit size={18} className="text-gray-600" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteFolder(folder.id)}
-                        className="p-1.5 rounded hover:bg-gray-100"
-                      >
-                        <Trash2 size={18} className="text-red-500" />
-                      </button>
-                    </div>
-                  </div>
-                )}
+            {folders.map(folder => (
+              <li key={folder.id} className="p-4 flex items-center justify-between">
+                <div className="flex items-center">
+                  <span className="text-2xl mr-3">{folder.icon}</span>
+                  <span>{folder.name}</span>
+                </div>
               </li>
             ))}
           </ul>
