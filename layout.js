@@ -29,16 +29,29 @@ export default function Layout({ children, currentPageName }) {
   useEffect(() => {
     const loadUserPreferences = async () => {
       try {
+        // Try to load from server first
         const userData = await User.me();
-        setTheme(userData.theme || "light");
-        setAccentColor(userData.accent_color || "blue");
+        if (userData && userData.theme) {
+          setTheme(userData.theme);
+        } else {
+          // Fallback to localStorage
+          const storedTheme = localStorage.getItem('theme');
+          if (storedTheme) setTheme(storedTheme);
+        }
+        
+        if (userData && userData.accent_color) {
+          setAccentColor(userData.accent_color);
+        } else {
+          // Fallback to localStorage
+          const storedAccent = localStorage.getItem('accent_color');
+          if (storedAccent) setAccentColor(storedAccent);
+        }
       } catch (error) {
-        // Try to load from localStorage as fallback for deployment environments
+        // Fallback to localStorage if server fails
         const storedTheme = localStorage.getItem('theme');
         const storedAccent = localStorage.getItem('accent_color');
         if (storedTheme) setTheme(storedTheme);
         if (storedAccent) setAccentColor(storedAccent);
-        console.log("User preferences not loaded from server");
       } finally {
         setIsLoading(false);
       }
@@ -49,17 +62,17 @@ export default function Layout({ children, currentPageName }) {
 
   const updateUserPreferences = async (newTheme, newAccent) => {
     try {
-      // Store in localStorage for deployment environments
+      // Always save to localStorage for consistent experience
       if (newTheme) localStorage.setItem('theme', newTheme);
       if (newAccent) localStorage.setItem('accent_color', newAccent);
       
-      // Also try to update on server if available
+      // Try to save to server if available
       await User.updateMyUserData({
         theme: newTheme || theme,
         accent_color: newAccent || accentColor
       });
     } catch (error) {
-      console.log("Could not update preferences on server, using localStorage only");
+      console.log("Saved preferences to localStorage only");
     }
   };
 

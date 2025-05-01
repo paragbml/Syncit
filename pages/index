@@ -1,0 +1,19 @@
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+
+// This page acts as an entry point that redirects to the Notes page
+export default function HomePage() {
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    // Redirect to Notes page on load
+    navigate(createPageUrl("Notes"));
+  }, [navigate]);
+
+  return (
+    <div className="flex items-center justify-center h-screen bg-[var(--notes-bg)]">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--accent)]"></div>
+    </div>
+  );
+}

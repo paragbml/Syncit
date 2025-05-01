@@ -1,0 +1,36 @@
+import React from 'react';
+
+// This component helps with safe deployment on platforms like Vercel
+export const makeUrl = (path) => {
+  // Handle relative URLs properly in different environments
+  const prefix = typeof window !== 'undefined' ? window.location.origin : '';
+  return `${prefix}${path.startsWith('/') ? path : '/' + path}`;
+};
+
+// Safe storage for platforms without access to server-side storage
+export const saveToStorage = (key, value) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch (error) {
+    console.error('Error saving to storage:', error);
+    return false;
+  }
+};
+
+export const getFromStorage = (key, defaultValue = null) => {
+  try {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : defaultValue;
+  } catch (error) {
+    console.error('Error getting from storage:', error);
+    return defaultValue;
+  }
+};
+
+// Function to safely check if we're in a production environment
+export const isProduction = () => {
+  return typeof window !== 'undefined' && 
+         window.location.hostname !== 'localhost' && 
+         !window.location.hostname.includes('127.0.0.1');
+};

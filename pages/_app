@@ -1,0 +1,15 @@
+import React from "react";
+import { BrowserRouter } from "react-router-dom";
+import Layout from "../Layout";
+import "../styles/globals.css";
+
+// This file is automatically recognized by Next.js and serves as the main wrapper
+export default function App({ Component, pageProps }) {
+  return (
+    <BrowserRouter>
+      <Layout>
+        <Component {...pageProps} />
+      </Layout>
+    </BrowserRouter>
+  );
+}

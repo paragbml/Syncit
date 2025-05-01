@@ -98,10 +98,19 @@ export default function PerplexityChat() {
       }]);
     } catch (err) {
       console.error('Perplexity API Error:', err);
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: `Sorry, there was an error processing your request: ${err.message}. Please check your API key or try again later.` 
-      }]);
+      
+      // If it's a network error or API not available
+      if (err.message.includes('NetworkError') || err.message.includes('Failed to fetch')) {
+        setMessages(prev => [...prev, { 
+          role: 'assistant', 
+          content: "I'm having trouble connecting to the Perplexity API. Please check your internet connection or try again later." 
+        }]);
+      } else {
+        setMessages(prev => [...prev, { 
+          role: 'assistant', 
+          content: `Sorry, there was an error processing your request: ${err.message}. Please check your API key or try again later.` 
+        }]);
+      }
       
       // If authentication error, clear the API key
       if (err.message && (
