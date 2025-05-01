@@ -5,6 +5,7 @@ import { Plus, Search, SortDesc, Grid, List, X, MessageCircle } from "lucide-rea
 import NoteItem from "./NoteItem";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { routes } from "./utils/routing";
 
 export default function NotesList({ folder = "All Notes", isArchive = false }) {
   const [notes, setNotes] = useState([]);
@@ -169,7 +170,7 @@ export default function NotesList({ folder = "All Notes", isArchive = false }) {
       {/* Footer with Button */}
       <div className="p-3 border-t border-[var(--border-color)] flex-shrink-0">
         <Link
-          to={createPageUrl("NoteEdit")}
+          to={routes.noteEdit}
           className="flex items-center justify-center py-2 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-light)] text-white transition-colors"
         >
           <Plus size={18} className="mr-2" />

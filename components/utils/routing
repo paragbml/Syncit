@@ -1,0 +1,12 @@
+import { createPageUrl } from "@/utils";
+
+export const routes = {
+  notes: createPageUrl("Notes"),
+  noteEdit: createPageUrl("NoteEdit"),
+  archive: createPageUrl("Archive"),
+  folders: createPageUrl("Folders")
+};
+
+export const navigate = (path) => {
+  window.location.href = path;
+};
