@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Note } from "@/entities/Note";
 import { Plus, Search, SortDesc, Grid, List, X, MessageCircle } from "lucide-react";
@@ -55,28 +56,75 @@ export default function NotesList({ folder = "All Notes", isArchive = false }) {
           note.content?.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : notes;
-
+  
   const clearSearch = () => {
     setSearchQuery("");
   };
 
+  const renderEmptyState = () => {
+    if (loading) {
+      return (
+        <div className="p-8 text-center text-[var(--text-secondary)]">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--accent)] mx-auto mb-4"></div>
+          <p className="font-medium">Loading notes...</p>
+        </div>
+      );
+    }
+    
+    if (searchQuery && filteredNotes.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full text-[var(--text-secondary)] p-8">
+          <Search size={36} className="mb-3 text-[var(--text-secondary)] opacity-30" />
+          <p className="text-center mb-2">No results found for "{searchQuery}"</p>
+          <button 
+            onClick={clearSearch}
+            className="text-[var(--accent)] hover:underline text-sm"
+          >
+            Clear search
+          </button>
+        </div>
+      );
+    }
+    
+    if (filteredNotes.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full text-[var(--text-secondary)] p-8">
+          <MessageCircle size={40} className="mb-3 text-[var(--text-secondary)] opacity-30" />
+          <p className="mb-3 text-center">
+            {isArchive ? "No archived notes yet" : "No notes yet"}
+          </p>
+          {!isArchive && (
+            <Link
+              to={createPageUrl("NoteEdit")}
+              className="px-4 py-2 rounded-md bg-[var(--accent)] text-white flex items-center"
+            >
+              <Plus size={16} className="mr-2" /> Create your first note
+            </Link>
+          )}
+        </div>
+      );
+    }
+    
+    return null;
+  };
+
   return (
-    <div className="flex flex-col h-full border-r border-gray-200">
+    <div className="flex flex-col h-full border-r border-[var(--border-color)]">
       {/* Header */}
-      <div className="p-3 border-b border-gray-200 flex-shrink-0">
+      <div className="p-3 border-b border-[var(--border-color)] flex-shrink-0">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-medium">
+          <h2 className="text-lg font-medium text-[var(--text-primary)]">
             {isArchive ? "Archive" : folder}
           </h2>
           <div className="flex space-x-1">
             <button
-              className={`p-1.5 rounded ${viewMode === "list" ? "bg-gray-200" : "hover:bg-gray-100"}`}
+              className={`p-1.5 rounded ${viewMode === "list" ? "bg-[var(--sidebar-bg)]" : "hover:bg-[var(--sidebar-hover)]"}`}
               onClick={() => setViewMode("list")}
             >
               <List size={18} />
             </button>
             <button
-              className={`p-1.5 rounded ${viewMode === "grid" ? "bg-gray-200" : "hover:bg-gray-100"}`}
+              className={`p-1.5 rounded ${viewMode === "grid" ? "bg-[var(--sidebar-bg)]" : "hover:bg-[var(--sidebar-hover)]"}`}
               onClick={() => setViewMode("grid")}
             >
               <Grid size={18} />
@@ -89,13 +137,13 @@ export default function NotesList({ folder = "All Notes", isArchive = false }) {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search notes"
-            className="w-full py-2 pl-9 pr-9 rounded-md bg-gray-100 text-gray-800 placeholder-gray-500 outline-none"
+            className="w-full py-2 pl-9 pr-9 rounded-md bg-[var(--sidebar-bg)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] outline-none border border-transparent focus:border-[var(--accent)]"
           />
-          <Search size={18} className="absolute left-3 top-2.5 text-gray-500" />
+          <Search size={18} className="absolute left-3 top-2.5 text-[var(--text-secondary)]" />
           {searchQuery && (
             <button
               onClick={clearSearch}
-              className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
+              className="absolute right-3 top-2.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             >
               <X size={18} />
             </button>
@@ -104,25 +152,8 @@ export default function NotesList({ folder = "All Notes", isArchive = false }) {
       </div>
 
       {/* Notes List */}
-      <div className="flex-1 overflow-y-auto">
-        {loading ? (
-          <div className="p-4 text-center text-gray-500">Loading notes...</div>
-        ) : filteredNotes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-500 p-4">
-            <MessageCircle size={40} className="mb-2 text-gray-300" />
-            <p className="mb-1 text-center">
-              {searchQuery ? "No notes match your search" : "No notes yet"}
-            </p>
-            {!searchQuery && (
-              <Link
-                to={createPageUrl("NoteEdit")}
-                className="mt-2 text-blue-500 flex items-center"
-              >
-                <Plus size={16} className="mr-1" /> Create your first note
-              </Link>
-            )}
-          </div>
-        ) : (
+      <div className="flex-1 overflow-y-auto bg-[var(--note-bg)]">
+        {renderEmptyState() || (
           <div className={viewMode === "grid" ? "grid grid-cols-2 gap-0.5" : ""}>
             {filteredNotes.map((note) => (
               <NoteItem
@@ -136,7 +167,7 @@ export default function NotesList({ folder = "All Notes", isArchive = false }) {
       </div>
 
       {/* Footer with Button */}
-      <div className="p-3 border-t border-gray-200 flex-shrink-0">
+      <div className="p-3 border-t border-[var(--border-color)] flex-shrink-0">
         <Link
           to={createPageUrl("NoteEdit")}
           className="flex items-center justify-center py-2 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-light)] text-white transition-colors"

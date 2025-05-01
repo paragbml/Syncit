@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Note } from "@/entities/Note";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import { ArrowLeft, Info } from "lucide-react";
+import { ArrowLeft, Info, Save } from "lucide-react";
 import { format } from "date-fns";
 
 import Toolbar from "../components/editor/Toolbar";
@@ -33,6 +34,8 @@ export default function NoteEdit() {
   const [lastSaved, setLastSaved] = useState(null);
   const [saveTimeout, setSaveTimeout] = useState(null);
   const quillRef = useRef(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [modified, setModified] = useState(false);
   
   useEffect(() => {
     loadNote();
@@ -56,9 +59,9 @@ export default function NoteEdit() {
     setLoading(false);
   };
 
-  // Auto-save when content changes
+  // Enhanced auto-save with status indicators
   useEffect(() => {
-    if (loading) return;
+    if (loading || !modified) return;
     
     // Clear any existing timeout
     if (saveTimeout) {
@@ -67,8 +70,8 @@ export default function NoteEdit() {
     
     // Set a new timeout
     const timeout = setTimeout(() => {
-      saveNote();
-    }, 1000);
+      saveNote(true);
+    }, 2000); // auto-save after 2 seconds of inactivity
     
     setSaveTimeout(timeout);
     
@@ -78,10 +81,23 @@ export default function NoteEdit() {
         clearTimeout(saveTimeout);
       }
     };
+  }, [note.title, note.content, note.resources, note.checklist, note.mindmap, note.is_pinned, note.is_archived, modified]);
+
+  // Mark as modified when content changes
+  useEffect(() => {
+    if (!loading) {
+      setModified(true);
+    }
   }, [note.title, note.content, note.resources, note.checklist, note.mindmap, note.is_pinned, note.is_archived]);
 
-  const saveNote = async () => {
+  const saveNote = async (isAutoSave = false) => {
+    if (!modified) return;
+    
     try {
+      if (!isAutoSave) {
+        setIsSaving(true);
+      }
+      
       // Don't save if there's nothing to save
       if (!note.title && !note.content && note.resources.length === 0 && note.checklist.length === 0) {
         return;
@@ -100,16 +116,44 @@ export default function NoteEdit() {
       } else {
         savedNote = await Note.create(updatedNote);
         // Redirect to the edit page with the new ID
-        navigate(`/app/NoteEdit?id=${savedNote.id}`, { replace: true });
+        if (!isAutoSave) {
+          navigate(`/app/NoteEdit?id=${savedNote.id}`, { replace: true });
+        } else {
+          // Just update the URL without navigation to avoid interruption
+          window.history.replaceState(null, '', `/app/NoteEdit?id=${savedNote.id}`);
+        }
       }
       
       setLastSaved(new Date());
+      setModified(false);
       
       return savedNote;
     } catch (error) {
       console.error("Error saving note:", error);
+    } finally {
+      if (!isAutoSave) {
+        setIsSaving(false);
+      }
     }
   };
+
+  // When leaving the page, attempt to save
+  const beforeUnloadHandler = (e) => {
+    if (modified) {
+      e.preventDefault();
+      e.returnValue = ''; // Required for Chrome
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('beforeunload', beforeUnloadHandler);
+    return () => {
+      window.removeEventListener('beforeunload', beforeUnloadHandler);
+      if (modified && !loading) {
+        saveNote(true);
+      }
+    };
+  }, [modified, loading, saveNote]);
 
   const handleToolbarAction = async (action) => {
     const quill = quillRef.current?.getEditor();
@@ -239,6 +283,21 @@ export default function NoteEdit() {
     setShowMindMap(false);
   };
 
+  const handleInsertText = (text) => {
+    const quill = quillRef.current?.getEditor();
+    
+    if (quill) {
+      // Insert text at the current cursor position
+      const range = quill.getSelection();
+      if (range) {
+        quill.insertText(range.index, text);
+      } else {
+        // If no selection, append to the end of the content
+        quill.insertText(quill.getLength() - 1, text);
+      }
+    }
+  };
+
   //Quill modules and formats configuration
   const modules = {
     toolbar: false, // We use our custom toolbar
@@ -267,7 +326,7 @@ export default function NoteEdit() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-[var(--note-bg)]">
       <Toolbar 
         onAction={handleToolbarAction}
         isPinned={note.is_pinned}
@@ -275,6 +334,8 @@ export default function NoteEdit() {
         onInsertResource={handleInsertResource}
         onInsertChecklist={handleInsertChecklist}
         onToggleMindMap={toggleMindMap}
+        noteContent={note.content}
+        onInsertText={handleInsertText}
       />
 
       <div className="flex-1 overflow-auto">
@@ -324,23 +385,43 @@ export default function NoteEdit() {
       </div>
 
       {/* Status bar */}
-      <div className="border-t border-gray-200 py-2 px-4 text-xs text-gray-500 flex items-center justify-between">
+      <div className="border-t border-[var(--border-color)] py-2 px-4 text-xs text-[var(--text-secondary)] flex items-center justify-between">
         <div className="flex items-center">
           <ArrowLeft 
             size={14} 
             className="mr-1 cursor-pointer" 
-            onClick={() => navigate(note.is_archived ? "/app/Archive" : "/app/Notes")} 
+            onClick={() => {
+              if (modified) {
+                saveNote(true).then(() => {
+                  navigate(note.is_archived ? "/app/Archive" : "/app/Notes");
+                });
+              } else {
+                navigate(note.is_archived ? "/app/Archive" : "/app/Notes");
+              }
+            }} 
           />
           <span>
-            {lastSaved ? `Last saved: ${format(lastSaved, "h:mm a")}` : "Not saved yet"}
+            {isSaving ? 
+              'Saving...' : 
+              (lastSaved ? `Last saved: ${format(lastSaved, "h:mm a")}` : "Not saved yet")}
           </span>
         </div>
         
-        <div className="flex items-center">
-          <Info size={14} className="mr-1" />
-          <span>
-            {note.id ? "Note ID: " + note.id.substring(0, 8) : "New note"}
-          </span>
+        <div className="flex items-center gap-3">
+          {modified && !isSaving && (
+            <button
+              onClick={() => saveNote()}
+              className="flex items-center text-[var(--accent)] hover:text-[var(--accent-light)]"
+            >
+              <Save size={12} className="mr-1" /> Save
+            </button>
+          )}
+          <div className="flex items-center">
+            <Info size={14} className="mr-1" />
+            <span>
+              {note.id ? "Note ID: " + note.id.substring(0, 8) : "New note"}
+            </span>
+          </div>
         </div>
       </div>
     </div>

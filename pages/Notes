@@ -1,12 +1,50 @@
-
 import React, { useState, useEffect } from "react";
 import NotesList from "../components/NotesList";
 import PerplexityChat from "../components/chat/PerplexityChat";
 import { X, Bot } from 'lucide-react';
+import { User } from "@/entities/User";
 
 export default function Notes() {
   const [selectedFolder, setSelectedFolder] = useState("All Notes");
   const [showChat, setShowChat] = useState(true);
+
+  // Load user preference for chat visibility on mount
+  useEffect(() => {
+    const loadPreferences = async () => {
+      try {
+        // Try to load from server first
+        const userData = await User.me();
+        if (userData?.preferences?.show_chat !== undefined) {
+          setShowChat(userData.preferences.show_chat);
+          return;
+        }
+      } catch (error) {
+        // Fallback to localStorage if server fails
+        const storedPref = localStorage.getItem('show_chat');
+        if (storedPref !== null) {
+          setShowChat(storedPref === 'true');
+        }
+      }
+    };
+    
+    loadPreferences();
+  }, []);
+
+  // Save preference when changed
+  const toggleChat = async () => {
+    const newState = !showChat;
+    setShowChat(newState);
+    
+    try {
+      // Try to save to server
+      await User.updateMyUserData({
+        preferences: { show_chat: newState }
+      });
+    } catch (error) {
+      // Fallback to localStorage
+      localStorage.setItem('show_chat', String(newState));
+    }
+  };
 
   return (
     <div className="flex h-full">
@@ -38,7 +76,7 @@ export default function Notes() {
 
       {/* Toggle Button */}
       <button
-        onClick={() => setShowChat(!showChat)}
+        onClick={toggleChat}
         className="fixed bottom-4 right-4 md:right-[420px] z-10 p-2 rounded-full bg-[var(--accent)] text-white shadow-lg"
       >
         {showChat ? <X size={20} /> : <Bot size={20} />}

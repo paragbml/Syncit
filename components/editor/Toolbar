@@ -21,6 +21,7 @@ import {
   Folder,
   PlusCircle
 } from "lucide-react";
+import NoteHelpers from "./NoteHelpers";
 
 export default function Toolbar({ 
   onAction, 
@@ -28,137 +29,154 @@ export default function Toolbar({
   isArchived,
   onInsertResource,
   onInsertChecklist,
-  onToggleMindMap 
+  onToggleMindMap,
+  noteContent,
+  onInsertText
 }) {
   return (
-    <div className="border-b border-gray-200 bg-gray-50 p-1 flex items-center justify-between">
+    <div className="border-b border-[var(--border-color)] bg-[var(--sidebar-bg)] p-1 flex items-center justify-between">
       <div className="flex space-x-1 overflow-x-auto hide-scrollbar">
         <button
           onClick={() => onAction("heading1")}
-          className="p-1.5 rounded hover:bg-gray-200"
+          className="p-1.5 rounded hover:bg-[var(--sidebar-hover)]"
           title="Heading 1"
         >
           <Heading1 size={18} />
         </button>
         <button
           onClick={() => onAction("heading2")}
-          className="p-1.5 rounded hover:bg-gray-200"
+          className="p-1.5 rounded hover:bg-[var(--sidebar-hover)]"
           title="Heading 2"
         >
           <Heading2 size={18} />
         </button>
-        <span className="h-6 border-l border-gray-300 mx-1 my-auto"></span>
+        <span className="h-6 border-l border-[var(--border-color)] mx-1 my-auto"></span>
         <button
           onClick={() => onAction("bold")}
-          className="p-1.5 rounded hover:bg-gray-200"
+          className="p-1.5 rounded hover:bg-[var(--sidebar-hover)]"
           title="Bold"
         >
           <Bold size={18} />
         </button>
         <button
           onClick={() => onAction("italic")}
-          className="p-1.5 rounded hover:bg-gray-200"
+          className="p-1.5 rounded hover:bg-[var(--sidebar-hover)]"
           title="Italic"
         >
           <Italic size={18} />
         </button>
         <button
           onClick={() => onAction("underline")}
-          className="p-1.5 rounded hover:bg-gray-200"
+          className="p-1.5 rounded hover:bg-[var(--sidebar-hover)]"
           title="Underline"
         >
           <Underline size={18} />
         </button>
-        <span className="h-6 border-l border-gray-300 mx-1 my-auto"></span>
+        <span className="h-6 border-l border-[var(--border-color)] mx-1 my-auto"></span>
         <button
           onClick={() => onAction("alignLeft")}
-          className="p-1.5 rounded hover:bg-gray-200"
+          className="p-1.5 rounded hover:bg-[var(--sidebar-hover)]"
           title="Align Left"
         >
           <AlignLeft size={18} />
         </button>
         <button
           onClick={() => onAction("alignCenter")}
-          className="p-1.5 rounded hover:bg-gray-200"
+          className="p-1.5 rounded hover:bg-[var(--sidebar-hover)]"
           title="Align Center"
         >
           <AlignCenter size={18} />
         </button>
         <button
           onClick={() => onAction("alignRight")}
-          className="p-1.5 rounded hover:bg-gray-200"
+          className="p-1.5 rounded hover:bg-[var(--sidebar-hover)]"
           title="Align Right"
         >
           <AlignRight size={18} />
         </button>
-        <span className="h-6 border-l border-gray-300 mx-1 my-auto"></span>
+        <span className="h-6 border-l border-[var(--border-color)] mx-1 my-auto"></span>
         <button
           onClick={() => onAction("bulletList")}
-          className="p-1.5 rounded hover:bg-gray-200"
+          className="p-1.5 rounded hover:bg-[var(--sidebar-hover)]"
           title="Bullet List"
         >
           <List size={18} />
         </button>
         <button
           onClick={() => onInsertChecklist()}
-          className="p-1.5 rounded hover:bg-gray-200"
+          className="p-1.5 rounded hover:bg-[var(--sidebar-hover)]"
           title="Checklist"
         >
           <CheckSquare size={18} />
         </button>
         <button
           onClick={() => onAction("code")}
-          className="p-1.5 rounded hover:bg-gray-200"
+          className="p-1.5 rounded hover:bg-[var(--sidebar-hover)]"
           title="Code"
         >
           <Code size={18} />
         </button>
       </div>
 
-      <div className="flex space-x-1">
-        <button
-          onClick={() => onInsertResource("image")}
-          className="p-1.5 rounded hover:bg-gray-200"
-          title="Insert Image"
-        >
-          <Image size={18} />
-        </button>
-        <button
-          onClick={() => onInsertResource("link")}
-          className="p-1.5 rounded hover:bg-gray-200"
-          title="Insert Link"
-        >
-          <Link2 size={18} />
-        </button>
-        <button
-          onClick={() => onToggleMindMap()}
-          className="p-1.5 rounded hover:bg-gray-200"
-          title="Mind Map"
-        >
-          <NetworkIcon size={18} />
-        </button>
-        <span className="h-6 border-l border-gray-300 mx-1 my-auto"></span>
-        <button
-          onClick={() => onAction("pin")}
-          className={`p-1.5 rounded hover:bg-gray-200 ${isPinned ? 'text-yellow-500' : ''}`}
-          title={isPinned ? "Unpin" : "Pin"}
-        >
-          <Pin size={18} className={isPinned ? "transform -rotate-45" : ""} />
-        </button>
-        <button
-          onClick={() => onAction("archive")}
-          className={`p-1.5 rounded hover:bg-gray-200 ${isArchived ? 'text-blue-500' : ''}`}
-          title={isArchived ? "Unarchive" : "Archive"}
-        >
-          <Archive size={18} />
-        </button>
-        <button
-          onClick={() => onAction("delete")}
-          className="p-1.5 rounded hover:bg-gray-200 text-red-500"
-          title="Delete"
-        >
-          <Trash2 size={18} />
-        </button>
+      <div className="flex items-center">
+        <span className="h-6 border-l border-[var(--border-color)] mx-2 lg:mx-4 my-auto"></span>
+        
+        {/* AI Helpers */}
+        <div className="hidden md:flex">
+          <NoteHelpers 
+            noteContent={noteContent} 
+            onInsertText={onInsertText}
+          />
+        </div>
+        
+        <span className="h-6 border-l border-[var(--border-color)] mx-2 lg:mx-4 my-auto"></span>
+        
+        {/* Resource Tools */}
+        <div className="flex space-x-1">
+          <button
+            onClick={() => onInsertResource("image")}
+            className="p-1.5 rounded hover:bg-[var(--sidebar-hover)]"
+            title="Insert Image"
+          >
+            <Image size={18} />
+          </button>
+          <button
+            onClick={() => onInsertResource("link")}
+            className="p-1.5 rounded hover:bg-[var(--sidebar-hover)]"
+            title="Insert Link"
+          >
+            <Link2 size={18} />
+          </button>
+          <button
+            onClick={() => onToggleMindMap()}
+            className="p-1.5 rounded hover:bg-[var(--sidebar-hover)]"
+            title="Mind Map"
+          >
+            <NetworkIcon size={18} />
+          </button>
+          <span className="h-6 border-l border-[var(--border-color)] mx-1 my-auto"></span>
+          <button
+            onClick={() => onAction("pin")}
+            className={`p-1.5 rounded hover:bg-[var(--sidebar-hover)] ${isPinned ? 'text-yellow-500' : ''}`}
+            title={isPinned ? "Unpin" : "Pin"}
+          >
+            <Pin size={18} className={isPinned ? "transform -rotate-45" : ""} />
+          </button>
+          <button
+            onClick={() => onAction("archive")}
+            className={`p-1.5 rounded hover:bg-[var(--sidebar-hover)] ${isArchived ? 'text-blue-500' : ''}`}
+            title={isArchived ? "Unarchive" : "Archive"}
+          >
+            <Archive size={18} />
+          </button>
+          <button
+            onClick={() => onAction("delete")}
+            className="p-1.5 rounded hover:bg-[var(--sidebar-hover)] text-red-500"
+            title="Delete"
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
       </div>
     </div>
   );
