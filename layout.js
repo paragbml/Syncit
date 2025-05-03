@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { User } from "@/entities/User";
 import { 
@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import StudyAssistantButton from "./components/aiAssistant/StudyAssistantButton";
+import { routes } from "./components/utils/routing";
 
 export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -23,6 +24,7 @@ export default function Layout({ children, currentPageName }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
+  const navigate = useNavigate();
   const [theme, setTheme] = useState("light");
   const [accentColor, setAccentColor] = useState("blue");
 
@@ -104,6 +106,7 @@ export default function Layout({ children, currentPageName }) {
 
   const handleLogout = async () => {
     await User.logout();
+    navigate(routes.login);
   };
 
   // Close sidebar when route changes on mobile
@@ -270,7 +273,7 @@ export default function Layout({ children, currentPageName }) {
 
           <nav className="flex-1 overflow-y-auto p-2">
             <Link
-              to={createPageUrl("Notes")}
+              to={routes.notes}
               className={`flex items-center p-2 rounded-md mb-1 text-[var(--text-primary)] ${
                 currentPageName === "Notes" 
                   ? "bg-[var(--accent)] bg-opacity-20 text-[var(--accent)]" 
@@ -282,7 +285,7 @@ export default function Layout({ children, currentPageName }) {
             </Link>
             
             <Link
-              to={createPageUrl("Archive")}
+              to={routes.archive}
               className={`flex items-center p-2 rounded-md mb-1 text-[var(--text-primary)] ${
                 currentPageName === "Archive" 
                   ? "bg-[var(--accent)] bg-opacity-20 text-[var(--accent)]" 
@@ -337,7 +340,7 @@ export default function Layout({ children, currentPageName }) {
               </div>
             ) : (
               <Link
-                to="#"
+                to={routes.login}
                 className="flex items-center justify-center p-2 bg-[var(--accent)] text-white rounded-md hover:bg-[var(--accent-light)]"
               >
                 Sign In

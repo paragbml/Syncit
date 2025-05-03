@@ -1,7 +1,8 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import Notes from "./Notes";
 
-// The index page simply renders the Notes component
 export default function IndexPage() {
   return <Notes />;
 }

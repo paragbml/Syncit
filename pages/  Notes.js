@@ -4,7 +4,6 @@ import NotesList from "../components/NotesList";
 import PerplexityChat from "../components/chat/PerplexityChat";
 import { X, Bot } from 'lucide-react';
 import { User } from "@/entities/User";
-import { routes } from "../components/utils/routing";
 
 export default function Notes() {
   const [selectedFolder, setSelectedFolder] = useState("All Notes");
